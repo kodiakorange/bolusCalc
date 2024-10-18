@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Simple Insulin Bolus</title>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<link href="https://www.w3schools.com/w3css/4/w3.css" rel="stylesheet" />
+		<script type="text/javascript">
+			function calcid(fdose, cdose) {
+				if (fdose + cdose < 0) {
+					dose = 0;
+				} else {
+					dose = fdose + cdose;
+				}
+				dose_r = Math.round(dose * 2) / 2;
+				dose_f = dose_r.toFixed(1);
+				return dose_f;
+			}
+
+			function compute() {
+				var f = self.document.forms[0];
+				r = f.cr.value;
+				s = f.isf.value;
+				t = f.tbg.value;
+				c = f.cbg.value;
+				m = f.mc.value;
+
+				if (chkw(m)) {
+					if (!chkw(r)) {
+						f.id.value = "";
+						f.cr.focus();
+						window.alert("You must enter a proper carb ratio if you're entering meal carbs!");
+						return;
+					} else if (m == 0) {
+						var fd = 0;
+					} else {
+						var fd = m / r;
+					}
+				} else if (m !== "") {
+					f.id.value = "";
+					f.mc.value = "";
+					f.mc.focus();
+					window.alert("Enter a proper number for your meal carbs!");
+					return;
+				} else {
+					var fd = 0;
+					f.mc.value = "—";
+					if (!chkw(r)) {
+						f.cr.value = "—";
+					}
+				}
+
+				if (chkw(c)) {
+					if (!chkw(s)) {
+						f.id.value = "";
+						f.isf.focus();
+						window.alert(
+							"You must enter a proper correction factor and target BG if you're entering a current BG value!"
+						);
+						return;
+					} else if (!chkw(t)) {
+						f.id.value = "";
+						f.tbg.focus();
+						window.alert(
+							"You must enter a proper correction factor and target BG if you're entering a current BG value!"
+						);
+						return;
+					} else if (c == 0) {
+						var cd = 0;
+					} else {
+						var cd = (c - t) / s;
+					}
+				} else if (c !== "") {
+					f.id.value = "";
+					f.cbg.value = "";
+					f.cbg.focus();
+					window.alert("Enter a proper number for your current BG!");
+					return;
+				} else {
+					var cd = 0;
+					f.cbg.value = "—";
+					if (!chkw(t)) {
+						f.tbg.value = "—";
+					}
+					if (!chkw(s)) {
+						f.isf.value = "—";
+					}
+				}
+
+				var today = new Date();
+				var dd = today.getDate();
+				var mm = today.getMonth() + 1;
+				var yyyy = today.getFullYear();
+				var hh = today.getHours();
+				var min = today.getMinutes();
+				var sec = today.getSeconds();
+				if (dd < 10) dd = "0" + dd;
+				if (mm < 10) mm = "0" + mm;
+				if (hh < 10) hh = "0" + hh;
+				if (min < 10) min = "0" + min;
+				if (sec < 10) sec = "0" + sec;
+				fulldate = yyyy + "/" + mm + "/" + dd + " @ " + hh + ":" + min + ":" + sec + " h";
+
+				if (chkw(c) || chkw(m)) {
+					f.id.value = calcid(fd, cd);
+					if (fd + cd < 0) {
+						f.carbcorrect.value = "[total dose for carbs and correction < 0]";
+					} else {
+						f.carbcorrect.value = "[" + fd.toFixed(1) + " units for carbs ";
+						if (cd < 0) {
+							f.carbcorrect.value += "− ";
+						} else {
+							f.carbcorrect.value += "+ ";
+						}
+						f.carbcorrect.value += Math.abs(cd).toFixed(1) + " units for correction]";
+						f.warning.value =
+							"Does not account for active insulin/insulin-on-board, nor for activity!\nTimestamp: " +
+							fulldate;
+					}
+					f.id.focus();
+				} else {
+					f.id.value = "—";
+				}
+				document.getElementById("idrow").style.visibility = "visible";
+				document.getElementById("warnrow").style.visibility = "visible";
+			}
+
+			function chkw(x) {
+				return !isNaN(parseFloat(x)) && x >= 0;
+			}
+
+			function clearall() {
+				var f = self.document.forms[0];
+				f.cr.value = "";
+				f.isf.value = "";
+				f.tbg.value = 100; // Set default for mg/dL
+				f.cbg.value = "";
+				f.mc.value = "";
+				f.id.value = "";
+				f.carbcorrect.value = "";
+				f.warning.value = "";
+				document.getElementById("idrow").style.visibility = "collapse";
+				document.getElementById("warnrow").style.visibility = "collapse";
+				f.cr.focus();
+			}
+
+			function cleardose() {
+				var f = self.document.forms[0];
+				f.id.value = "";
+				f.carbcorrect.value = "";
+				f.warning.value = "";
+				document.getElementById("idrow").style.visibility = "collapse";
+				document.getElementById("warnrow").style.visibility = "collapse";
+			}
+
+			function openmodal() {
+				$("#myModal").modal("show");
+			}
+		</script>
+		<style type="text/css">
+			td.tdright {
+				text-align: right;
+				width: 50%;
+			}
+			td.tdleft {
+				text-align: left;
+				width: 50%;
+			}
+			input.icenter {
+				text-align: center;
+				width: 40%;
+				vertical-align: middle;
+			}
+			input.idata {
+				width: 100%;
+				border-style: hidden;
+				background-color: #ffffff;
+				text-align: center;
+			}
+		</style>
+	</head>
+
+	<body class="w3-content" style="max-width: 450px">
+		<div class="w3-container" style="vertical-align: middle">
+			<div class="w3-responsive w3-padding-16">
+				<table
+					class="w3-table w3-indigo w3-border w3-border-orange w3-leftbar w3-rightbar w3-topbar w3-bottombar">
+					<tr>
+						<td style="width: 20%">
+							&nbsp;
+							<img
+								alt="BolusCalc"
+								class="w3-image"
+								src="boluscalc.png"
+								style="float: left; width: 100%; max-width: 96px" />
+						</td>
+						<td style="width: 80%">
+							<h4 class="w3-center">
+								<strong>
+									<em>BolusCalc:</em>
+									<br />
+									Simple Bolus Calculator
+								</strong>
+							</h4>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="w3-container">
+			<div class="w3-responsive">
+				<form>
+					<div
+						class="w3-border w3-border-orange w3-leftbar w3-rightbar w3-topbar w3-bottombar w3-padding-16"
+						style="overflow: hidden">
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div
+								class="w3-container w3-cell w3-cell-middle w3-center-align w3-center"
+								style="width: 100%">
+								<p>
+									<input checked="true" name="bgunits" id="r2" value="mg/dL" type="radio" />
+									&nbsp;mg/dL
+								</p>
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Carb Ratio:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input
+									autofocus=""
+									class="icenter"
+									name="cr"
+									onmousedown="self.cleardose();"
+									type="text" />
+								&nbsp;&nbsp;grams
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Correction/ISF:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input class="icenter" name="isf" type="text" />
+								&nbsp;&nbsp;mg/dL
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Target BG:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input class="icenter" name="tbg" value="100" type="text" />
+								&nbsp;&nbsp;mg/dL
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Current BG:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input class="icenter" name="cbg" type="text" />
+								&nbsp;&nbsp;mg/dL
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Meal Carbs:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input class="icenter" name="mc" type="text" />
+								&nbsp;&nbsp;grams
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+								<p>Insulin Dose:</p>
+							</div>
+							<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+								<input class="icenter" id="id" type="text" class="idata" readonly="" />
+							</div>
+						</div>
+						<div id="idrow" style="visibility: collapse">
+							<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+								<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+									<p>Carb/Correction:</p>
+								</div>
+								<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+									<input class="icenter" id="carbcorrect" type="text" class="idata" readonly="" />
+								</div>
+							</div>
+						</div>
+						<div id="warnrow" style="visibility: collapse">
+							<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+								<div class="w3-container w3-cell w3-cell-middle w3-right-align" style="width: 45%">
+									<p>Warning:</p>
+								</div>
+								<div class="w3-container w3-cell w3-cell-middle w3-left-align" style="width: 50%">
+									<input class="icenter" id="warning" type="text" class="idata" readonly="" />
+								</div>
+							</div>
+						</div>
+						<div class="w3-cell-row" style="padding-left: 0px; padding-right: 0px">
+							<div class="w3-container w3-cell w3-cell-middle w3-center-align" style="width: 100%">
+								<button class="w3-button w3-dark-grey" onclick="compute(); return false;">
+									Compute
+								</button>
+								<button class="w3-button w3-grey" onclick="clearall(); return false;">Clear</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+</html>
